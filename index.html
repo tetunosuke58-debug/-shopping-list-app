@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>家族の買い物リスト</title>
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="買い物リスト" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --line: #e5e7eb;
+      --primary: #3b82f6;
+      --primary-strong: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --done-bg: #f3f4f6;
+      --done-text: #9ca3af;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --tap: 56px;
+      --maxw: 680px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+        "Noto Sans JP", "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) 16px 100px 16px;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 8px 0 14px;
+      backdrop-filter: blur(10px);
+      background: rgba(245, 247, 251, 0.82);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .title-wrap p {
+      margin: 6px 0 0;
+      color: var(--sub);
+      font-size: 0.92rem;
+    }
+
+    .icon-btn {
+      border: none;
+      background: var(--card);
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .2s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.96);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .composer {
+      padding: 14px;
+      margin-top: 8px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      color: var(--sub);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .category-btn {
+      border: 1px solid var(--line);
+      background: #f9fafb;
+      color: var(--text);
+      min-height: 48px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all .16s ease;
+    }
+
+    .category-btn.active {
+      background: #eff6ff;
+      color: var(--primary-strong);
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .name-input {
+      width: 100%;
+      min-height: var(--tap);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 0 16px;
+      font-size: 1rem;
+      outline: none;
+      background: #fff;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .name-input:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .add-btn {
+      min-width: 92px;
+      min-height: var(--tap);
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease, filter .2s ease;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, .26);
+    }
+
+    .add-btn:active {
+      transform: scale(0.97);
+    }
+
+    .add-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .stat .num {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .stat .label {
+      color: var(--sub);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .list-section {
+      margin-top: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 0 2px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .section-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .section-head button {
+      border: none;
+      background: transparent;
+      color: var(--primary-strong);
+      font-weight: 800;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .danger-btn {
+      border: none;
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.86rem;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .danger-btn:active {
+      transform: scale(0.97);
+    }
+
+    .danger-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: var(--shadow);
+      transition: transform .18s ease, opacity .18s ease, background-color .18s ease;
+      animation: enterUp .22s ease;
+    }
+
+    .item.done {
+      background: var(--done-bg);
+      opacity: 0.82;
+      box-shadow: none;
+    }
+
+    .check-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+      position: relative;
+      transition: all .16s ease;
+    }
+
+    .check-btn:active {
+      transform: scale(0.95);
+    }
+
+    .item.done .check-btn {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .item.done .check-btn::after {
+      content: "✓";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-title {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .item.done .item-title {
+      color: var(--done-text);
+      text-decoration: line-through;
+    }
+
+    .meta {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      background: #eff6ff;
+      color: var(--primary-strong);
+    }
+
+    .item.done .badge {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+
+    .timestamp {
+      color: var(--sub);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .empty {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--sub);
+      background: rgba(255,255,255,0.65);
+      border: 1px dashed #d1d5db;
+      border-radius: 18px;
+    }
+
+    .loading {
+      display: none;
+      margin-top: 12px;
+      color: var(--sub);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(17, 24, 39, 0.92);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .25s ease;
+      z-index: 50;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes enterUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (min-width: 640px) {
+      .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-row">
+        <div class="title-wrap">
+          <h1>🛒 家族の買い物リスト</h1>
+          <p>片手でサクッと追加。買ったらワンタップで完了。</p>
+        </div>
+        <button class="icon-btn" id="refreshBtn" title="更新">↻</button>
+      </div>
+    </header>
+
+    <section class="card composer">
+      <div class="section-label">
+        <span>カテゴリを選んで、品名を入力</span>
+        <span id="selectedCategoryLabel"></span>
+      </div>
+
+      <div class="category-grid" id="categoryGrid"></div>
+
+      <form id="addForm" class="input-row" autocomplete="off">
+        <input
+          id="itemName"
+          class="name-input"
+          type="text"
+          maxlength="80"
+          placeholder="例: 牛乳"
+          enterkeyhint="done"
+        />
+        <button id="addBtn" class="add-btn" type="submit">追加</button>
+      </form>
+
+      <div class="loading" id="loadingText">同期中...</div>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="num" id="activeCount">0</div>
+        <div class="label">未購入</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="doneCount">0</div>
+        <div class="label">購入済み</div>
+      </div>
+    </section>
+
+    <section class="list-section">
+      <div class="section-head">
+        <h2>今買うもの</h2>
+      </div>
+      <div class="list" id="activeList"></div>
+    </section>
+
+    <section class="list-section">
+      <div class="section-head">
+        <h2>購入済み</h2>
+        <div class="section-actions">
+          <button id="clearDoneBtn" class="danger-btn" type="button">一括削除</button>
+          <button id="toggleDoneViewBtn" type="button">閉じる</button>
+        </div>
+      </div>
+      <div class="list" id="doneList"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzPzvlOf0D7PkTaPVbxv_05azWvgtDxcgyA1LYq2EURzceGnlEDB3gTwEOdJ7CdxcVv/exec";
+
+    const CATEGORIES = [
+      "食料品",
+      "日用品",
+      "子供用品",
+      "飲料（お酒・ノンアルコール）",
+      "トレーニング・ヘルスケア（プロテインなど）",
+      "その他"
+    ];
+
+    const PLACEHOLDERS = {
+      "食料品": "例: 牛乳 / 卵 / バナナ",
+      "日用品": "例: 洗剤 / ティッシュ / ゴミ袋",
+      "子供用品": "例: おむつ / おしりふき / おやつ",
+      "飲料（お酒・ノンアルコール）": "例: 水 / ビール / お茶",
+      "トレーニング・ヘルスケア（プロテインなど）": "例: プロテイン / サプリ / 湿布",
+      "その他": "例: 電池 / 文房具 / 予備"
+    };
+
+    const state = {
+      items: [],
+      selectedCategory:
+        localStorage.getItem("shopping:selectedCategory") || CATEGORIES[0],
+      showDone:
+        localStorage.getItem("shopping:showDone") !== "false",
+      loading: false
+    };
+
+    const el = {
+      categoryGrid: document.getElementById("categoryGrid"),
+      selectedCategoryLabel: document.getElementById("selectedCategoryLabel"),
+      itemName: document.getElementById("itemName"),
+      addForm: document.getElementById("addForm"),
+      addBtn: document.getElementById("addBtn"),
+      loadingText: document.getElementById("loadingText"),
+      activeList: document.getElementById("activeList"),
+      doneList: document.getElementById("doneList"),
+      activeCount: document.getElementById("activeCount"),
+      doneCount: document.getElementById("doneCount"),
+      toast: document.getElementById("toast"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      toggleDoneViewBtn: document.getElementById("toggleDoneViewBtn"),
+      clearDoneBtn: document.getElementById("clearDoneBtn")
+    };
+
+    let toastTimer = null;
+
+    function showToast(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.toast.classList.remove("show");
+      }, 1800);
+    }
+
+    function setLoading(flag) {
+      state.loading = flag;
+      el.loadingText.classList.toggle("show", flag);
+      el.addBtn.disabled = flag;
+      el.refreshBtn.disabled = flag;
+      el.clearDoneBtn.disabled = flag;
+    }
+
+    function vibrateLight() {
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function saveLocalCache() {
+      localStorage.setItem("shopping:itemsCache", JSON.stringify(state.items));
+    }
+
+    function loadLocalCache() {
+      try {
+        const cache = JSON.parse(localStorage.getItem("shopping:itemsCache") || "[]");
+        if (Array.isArray(cache)) {
+          state.items = cache;
+        }
+      } catch (_) {}
+    }
+
+    function formatDateTime(isoString) {
+      if (!isoString) return "";
+      const d = new Date(isoString);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function escapeHTML(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderCategories() {
+      el.categoryGrid.innerHTML = "";
+      CATEGORIES.forEach((category) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "category-btn" + (category === state.selectedCategory ? " active" : "");
+        btn.textContent = category;
+        btn.addEventListener("click", () => {
+          state.selectedCategory = category;
+          localStorage.setItem("shopping:selectedCategory", category);
+          updateInputPlaceholder();
+          renderCategories();
+        });
+        el.categoryGrid.appendChild(btn);
+      });
+      el.selectedCategoryLabel.textContent = `選択中: ${state.selectedCategory}`;
+    }
+
+    function updateInputPlaceholder() {
+      el.itemName.placeholder = PLACEHOLDERS[state.selectedCategory] || "例: 牛乳";
+    }
+
+    function renderLists() {
+      const activeItems = state.items.filter(item => !item.purchased);
+      const doneItems = state.items.filter(item => item.purchased);
+
+      el.activeCount.textContent = String(activeItems.length);
+      el.doneCount.textContent = String(doneItems.length);
+
+      renderItemGroup(el.activeList, activeItems, false);
+      renderItemGroup(el.doneList, doneItems, true);
+
+      el.doneList.style.display = state.showDone ? "flex" : "none";
+      el.toggleDoneViewBtn.textContent = state.showDone ? "閉じる" : "開く";
+      el.clearDoneBtn.style.display = doneItems.length ? "inline-flex" : "none";
+    }
+
+    function renderItemGroup(container, items, isDoneList) {
+      container.innerHTML = "";
+
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = isDoneList
+          ? "まだ購入済みはありません"
+          : "リストは空です。下から追加しましょう。";
+        container.appendChild(empty);
+        return;
+      }
+
+      items.forEach(item => {
+        const node = document.createElement("div");
+        node.className = "item" + (item.purchased ? " done" : "");
+
+        const checkedAt = item.purchased ? formatDateTime(item.purchasedAt || item.updatedAt) : "";
+        const createdAt = formatDateTime(item.createdAt);
+
+        node.innerHTML = `
+          <button class="check-btn" aria-label="${item.purchased ? '未購入に戻す' : '購入済みにする'}"></button>
+          <div class="item-main">
+            <div class="item-title">${escapeHTML(item.itemName)}</div>
+            <div class="meta">
+              <span class="badge">${escapeHTML(item.category)}</span>
+              <span class="timestamp">
+                ${item.purchased ? `購入: ${checkedAt}` : `追加: ${createdAt}`}
+              </span>
+            </div>
+          </div>
+        `;
+
+        const checkBtn = node.querySelector(".check-btn");
+        checkBtn.addEventListener("click", () => togglePurchased(item));
+
+        container.appendChild(node);
+      });
+    }
+
+    async function fetchList({ silent = false } = {}) {
+      if (!silent) setLoading(true);
+      try {
+        const url = `${GAS_WEB_APP_URL}?action=list&t=${Date.now()}`;
+        const res = await fetch(url, {
+          method: "GET",
+          cache: "no-store"
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "取得に失敗しました");
+        state.items = data.items || [];
+        saveLocalCache();
+        renderLists();
+      } catch (err) {
+        console.error(err);
+        showToast("通信エラー。キャッシュを表示しています");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    }
+
+    async function postAction(payload) {
+      const res = await fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=UTF-8"
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "APIエラー");
+      return data;
+    }
+
+    async function addItem(name, category) {
+      const data = await postAction({
+        action: "add",
+        itemName: name,
+        category
+      });
+      if (data.item) {
+        state.items.unshift(data.item);
+        saveLocalCache();
+        renderLists();
+      } else {
+        await fetchList({ silent: true });
+      }
+    }
+
+    async function togglePurchased(item) {
+      const prev = item.purchased;
+      const next = !prev;
+
+      item.purchased = next;
+      item.updatedAt = new Date().toISOString();
+      item.purchasedAt = next ? new Date().toISOString() : "";
+      saveLocalCache();
+      renderLists();
+      vibrateLight();
+
+      try {
+        await postAction({
+          action: "toggle",
+          id: item.id,
+          purchased: next
+        });
+        showToast(next ? "購入済みにしました" : "未購入に戻しました");
+        await fetchList({ silent: true });
+      } catch (err) {
+        item.purchased = prev;
+        saveLocalCache();
+        renderLists();
+        showToast("更新に失敗しました");
+      }
+    }
+
+    async function clearPurchasedItems() {
+      const doneItems = state.items.filter(item => item.purchased);
+      if (!doneItems.length) {
+        showToast("削除する購入済みはありません");
+        return;
+      }
+
+      const ok = window.confirm(`購入済み ${doneItems.length} 件を削除しますか？`);
+      if (!ok) return;
+
+      const prevItems = [...state.items];
+      state.items = state.items.filter(item => !item.purchased);
+      saveLocalCache();
+      renderLists();
+
+      setLoading(true);
+      try {
+        const data = await postAction({
+          action: "clearPurchased"
+        });
+        showToast(`購入済みを ${data.deletedCount || 0} 件削除しました`);
+        vibrateLight();
+        await fetchList({ silent: true });
+      } catch (err) {
+        console.error(err);
+        state.items = prevItems;
+        saveLocalCache();
+        renderLists();
+        showToast("一括削除に失敗しました");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function bindEvents() {
+      el.addForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = el.itemName.value.trim();
+        if (!name) {
+          el.itemName.focus();
+          return;
+        }
+
+        const category = state.selectedCategory;
+        setLoading(true);
+        try {
+          await addItem(name, category);
+          el.itemName.value = "";
+          el.itemName.focus();
+          showToast("追加しました");
+          vibrateLight();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (err) {
+          console.error(err);
+          showToast("追加に失敗しました");
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      el.refreshBtn.addEventListener("click", () => fetchList());
+      el.toggleDoneViewBtn.addEventListener("click", () => {
+        state.showDone = !state.showDone;
+        localStorage.setItem("shopping:showDone", String(state.showDone));
+        renderLists();
+      });
+      el.clearDoneBtn.addEventListener("click", clearPurchasedItems);
+    }
+
+    function registerServiceWorker() {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      }
+    }
+
+    function init() {
+      loadLocalCache();
+      renderCategories();
+      updateInputPlaceholder();
+      renderLists();
+      bindEvents();
+      fetchList();
+      registerServiceWorker();
+    }
+
+    init();
+  </script>
+</body>
+</html>
